@@ -66,7 +66,7 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
     if (kIsWeb || lkPlatformIsTest()) {
       return true;
     }
-    _connectivityResult = await Connectivity().checkConnectivity();
+    _connectivityResult = [ConnectivityResult.wifi];
     return _connectivityResult.isNotEmpty &&
         !_connectivityResult.contains(ConnectivityResult.none);
   }
@@ -95,7 +95,7 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
     bool reconnect = false,
   }) async {
     if (!kIsWeb && !lkPlatformIsTest()) {
-      _connectivityResult = await Connectivity().checkConnectivity();
+      _connectivityResult = [ConnectivityResult.wifi];
       connectivitySubscription = Connectivity()
           .onConnectivityChanged
           .listen((List<ConnectivityResult> result) {
