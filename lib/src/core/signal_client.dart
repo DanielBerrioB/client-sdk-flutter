@@ -59,7 +59,6 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
   String? participantSid;
 
   List<ConnectivityResult> _connectivityResult = [];
-  StreamSubscription<List<ConnectivityResult>>? connectivitySubscription;
 
   Future<bool> networkIsAvailable() async {
     // Skip check for web or flutter test
@@ -80,9 +79,6 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
     onDispose(() async {
       await cleanUp();
       await events.dispose();
-      if (!kIsWeb && !lkPlatformIsTest()) {
-        await connectivitySubscription?.cancel();
-      }
     });
   }
 
@@ -96,23 +92,6 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
   }) async {
     if (!kIsWeb && !lkPlatformIsTest()) {
       _connectivityResult = [ConnectivityResult.wifi];
-      connectivitySubscription = Connectivity()
-          .onConnectivityChanged
-          .listen((List<ConnectivityResult> result) {
-        if (_connectivityResult != result) {
-          if (result.contains(ConnectivityResult.none)) {
-            logger.warning('lost connectivity');
-          } else {
-            logger.info(
-                'Connectivity changed, ${_connectivityResult} => ${result}');
-          }
-          events.emit(SignalConnectivityChangedEvent(
-            oldState: _connectivityResult,
-            state: result,
-          ));
-          _connectivityResult = result;
-        }
-      });
 
       if (_connectivityResult.contains(ConnectivityResult.none)) {
         logger.warning('no internet connection');
