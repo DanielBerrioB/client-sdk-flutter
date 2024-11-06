@@ -196,23 +196,23 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
         roomOptions: this.roomOptions,
       );
 
-      // // wait for join response
-      // await _signalListener.waitFor<SignalJoinResponseEvent>(
-      //   duration: this.connectOptions.timeouts.connection,
-      //   onTimeout: () => throw ConnectException(
-      //       'Timed out waiting for SignalJoinResponseEvent',
-      //       reason: ConnectionErrorReason.Timeout),
-      // );
-      //
-      // logger.fine('Waiting for engine to connect...');
-      //
-      // // wait until primary pc is connected
-      // await events.waitFor<EnginePeerStateUpdatedEvent>(
-      //   filter: (event) => event.isPrimary && event.state.isConnected(),
-      //   duration: this.connectOptions.timeouts.connection,
-      //   onTimeout: () => throw MediaConnectException(
-      //       'Timed out waiting for PeerConnection to connect, please check your network for ice connectivity'),
-      // );
+      // wait for join response
+      await _signalListener.waitFor<SignalJoinResponseEvent>(
+        duration: this.connectOptions.timeouts.connection,
+        onTimeout: () => throw ConnectException(
+            'Timed out waiting for SignalJoinResponseEvent',
+            reason: ConnectionErrorReason.Timeout),
+      );
+
+      logger.fine('Waiting for engine to connect...');
+
+      // wait until primary pc is connected
+      await events.waitFor<EnginePeerStateUpdatedEvent>(
+        filter: (event) => event.isPrimary && event.state.isConnected(),
+        duration: this.connectOptions.timeouts.connection,
+        onTimeout: () => throw MediaConnectException(
+            'Timed out waiting for PeerConnection to connect, please check your network for ice connectivity'),
+      );
       events.emit(const EngineConnectedEvent());
     } catch (error) {
       logger.fine('Connect Error $error');
