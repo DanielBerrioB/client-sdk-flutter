@@ -334,7 +334,7 @@ class Utils {
     if (!kIsWeb && lkPlatformIsTest()) {
       return 'wifi';
     }
-    var connectivityResult = [ConnectivityResult.wifi];
+    var connectivityResult = await Connectivity().checkConnectivity();
     // wifi, wired, cellular, vpn, empty if not known
     String networkType = 'empty';
     if (connectivityResult.contains(ConnectivityResult.none)) {
