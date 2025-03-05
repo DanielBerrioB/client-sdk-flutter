@@ -59,14 +59,13 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
   String? participantSid;
 
   List<ConnectivityResult> _connectivityResult = [];
-  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   Future<bool> networkIsAvailable() async {
     // Skip check for web or flutter test
     if (kIsWeb || lkPlatformIsTest()) {
       return true;
     }
-    _connectivityResult = await Connectivity().checkConnectivity();
+    _connectivityResult = [ConnectivityResult.wifi];
     return _connectivityResult.isNotEmpty &&
         !_connectivityResult.contains(ConnectivityResult.none);
   }
@@ -81,10 +80,6 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
       await cleanUp();
       await events.cancelAll();
       await events.dispose();
-      if (!kIsWeb && !lkPlatformIsTest()) {
-        await _connectivitySubscription?.cancel();
-        _connectivitySubscription = null;
-      }
     });
   }
 
@@ -97,25 +92,7 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
     bool reconnect = false,
   }) async {
     if (!kIsWeb && !lkPlatformIsTest()) {
-      _connectivityResult = await Connectivity().checkConnectivity();
-      await _connectivitySubscription?.cancel();
-      _connectivitySubscription = Connectivity()
-          .onConnectivityChanged
-          .listen((List<ConnectivityResult> result) {
-        if (_connectivityResult != result) {
-          if (result.contains(ConnectivityResult.none)) {
-            logger.warning('lost connectivity');
-          } else {
-            logger.info(
-                'Connectivity changed, ${_connectivityResult} => ${result}');
-          }
-          events.emit(SignalConnectivityChangedEvent(
-            oldState: _connectivityResult,
-            state: result,
-          ));
-          _connectivityResult = result;
-        }
-      });
+      _connectivityResult = [ConnectivityResult.wifi];
 
       if (_connectivityResult.contains(ConnectivityResult.none)) {
         logger.warning('no internet connection');
