@@ -1,5 +1,50 @@
 # CHANGELOG
 
+## 2.4.0
+
+* feat: RPC. (#682)
+* fix: Properly handle broadcast capture state (#705)
+
+## 2.3.6
+
+* Emit a final empty AudioVisualizerEvent after track stops (#701)
+* fix: Improve speaker switching logic for iOS. (#692)
+
+## 2.3.5
+
+* feat: add TrackProcessor support. (#657)
+* fix: bug for mute/unmute and speaker switch. (#684)
+
+## 2.3.4+hotfix.2
+
+* fix: side effects for stop remote track.
+
+## 2.3.4+hotfix.1
+
+* fix: bug for speakerPhone switch. (#672)
+
+## 2.3.4
+
+* fix bypass voice processing not work. (#668)
+* fix track.stop for remote track. (#669)
+* fix Visualizer block UI. (#667)
+
+## 2.3.3
+
+* Support FocusMode/ExposureMode for camera capture options. (#658)
+* Fix Swift compilation errors (#662)
+* Improve reconnect logic. (#654)
+* Fixed bug for Screen Share on iOS/Android.
+
+## 2.3.2
+
+* Add support for audio visualizer.
+
+## 2.3.1+hotfix.1
+
+* Fix version mismatch for CocoaPods (#648)
+* Android AGP upgrade (#649)
+
 ## 2.3.0
 
 * fix: Fixed speaker cannot be switched on iOS. (#617)
@@ -13,7 +58,7 @@
 
 * feat: support bypass voice processing. (#595)
 * fix: Dispose LocalParticipant when room.disconnect. (#609)
-* Fix spelling error in method name: _checkPremissions to _checkPermissions (#605)
+* Fix spelling error in method name: _checkPremissions to_checkPermissions (#605)
 * fix: fix speaker switching behavior for android. (#604)
 * fix: Optimize stats display (#602)
 * fix: Handle disconnect reasons correctly. (#594)
@@ -120,6 +165,7 @@ feat: provide option to skip stop/restartTrack for mute/unmute (#516)
 ## 2.0.0
 
 ## Breaking Changes
+
 There are several breaking changes between v1 and v2. Please consult our [migration guide](https://docs.livekit.io/guides/migrate-from-v1/) when upgrading to v2.
 
 * `Room.participants` was renamed to `Room.remoteParticipants`
@@ -193,8 +239,8 @@ There are several breaking changes between v1 and v2. Please consult our [migrat
 
 ## 1.5.2
 
-* Non-functional update, forcing the versions in 
-  `'ios/livekit_client.podspec', 'macos/livekit_client.podspec', 'lib/src/livekit.dart'` 
+* Non-functional update, forcing the versions in
+  `'ios/livekit_client.podspec', 'macos/livekit_client.podspec', 'lib/src/livekit.dart'`
   consistent with pubspec.yaml
 
 ## 1.5.1
@@ -220,7 +266,7 @@ There are several breaking changes between v1 and v2. Please consult our [migrat
 * Fix: fix the speakerPhone switch issue for Android.
 * Fix: fix iOS cannot publish the audio track correctly.
 * Fix: fix crash when re-publish video track on Windows/Linux.
-* Fix: set preferCurrentTab to false by default 
+* Fix: set preferCurrentTab to false by default
 
 ## 1.4.1
 

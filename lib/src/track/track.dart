@@ -110,6 +110,8 @@ abstract class Track extends DisposableChangeNotifier
 
     startMonitor();
 
+    await onStarted();
+
     _active = true;
     return true;
   }
@@ -125,7 +127,11 @@ abstract class Track extends DisposableChangeNotifier
 
     stopMonitor();
 
+    await onStopped();
+
     logger.fine('$objectId.stop()');
+
+    await mediaStreamTrack.stop();
 
     _active = false;
     return true;
@@ -158,7 +164,14 @@ abstract class Track extends DisposableChangeNotifier
 
   Timer? _monitorTimer;
 
+  @internal
   Future<bool> monitorStats();
+
+  @internal
+  Future<void> onStarted() async {}
+
+  @internal
+  Future<void> onStopped() async {}
 
   @internal
   void startMonitor() {

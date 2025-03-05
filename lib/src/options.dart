@@ -115,6 +115,11 @@ class RoomOptions {
   /// Options for end-to-end encryption.
   final E2EEOptions? e2eeOptions;
 
+  /// deprecated, use [createVisualizer] instead
+  /// please refer to example/lib/widgets/sound_waveform.dart
+  @Deprecated('Use createVisualizer instead')
+  final bool? enableVisualizer;
+
   const RoomOptions({
     this.defaultCameraCaptureOptions = const CameraCaptureOptions(),
     this.defaultScreenShareCaptureOptions = const ScreenShareCaptureOptions(),
@@ -126,6 +131,7 @@ class RoomOptions {
     this.dynacast = false,
     this.stopLocalTrackOnUnpublish = true,
     this.e2eeOptions,
+    this.enableVisualizer,
   });
 
   RoomOptions copyWith({

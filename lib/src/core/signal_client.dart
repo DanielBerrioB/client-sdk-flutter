@@ -78,6 +78,7 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
 
     onDispose(() async {
       await cleanUp();
+      await events.cancelAll();
       await events.dispose();
     });
   }
@@ -95,8 +96,6 @@ class SignalClient extends Disposable with EventsEmittable<SignalEvent> {
 
       if (_connectivityResult.contains(ConnectivityResult.none)) {
         logger.warning('no internet connection');
-        events.emit(SignalDisconnectedEvent(
-            reason: DisconnectReason.noInternetConnection));
         throw ConnectException('no internet connection',
             reason: ConnectionErrorReason.InternalError, statusCode: 503);
       }

@@ -127,9 +127,11 @@ class _PreJoinPageState extends State<PreJoinPage> {
     }
 
     if (_selectedAudioDevice != null) {
-      _audioTrack = await LocalAudioTrack.create(AudioCaptureOptions(
-        deviceId: _selectedAudioDevice!.deviceId,
-      ));
+      _audioTrack = await LocalAudioTrack.create(
+        AudioCaptureOptions(
+          deviceId: _selectedAudioDevice!.deviceId,
+        ),
+      );
       await _audioTrack!.start();
     }
   }
