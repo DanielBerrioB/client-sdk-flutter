@@ -36,6 +36,7 @@ import '../proto/livekit_models.pb.dart' as lk_models;
 import '../proto/livekit_rtc.pb.dart' as lk_rtc;
 import '../publication/local.dart';
 import '../support/disposable.dart';
+import '../support/platform.dart';
 import '../support/region_url_provider.dart';
 import '../support/websocket.dart';
 import '../track/local/video.dart';
@@ -132,6 +133,10 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
   bool attemptingReconnect = false;
 
   RegionUrlProvider? _regionUrlProvider;
+
+  lk_models.ServerInfo? _serverInfo;
+
+  lk_models.ServerInfo? get serverInfo => _serverInfo;
 
   void clearReconnectTimeout() {
     if (reconnectTimeout != null) {
@@ -339,12 +344,13 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
             rtc.RTCPeerConnectionState.RTCPeerConnectionStateConnecting) {
           await negotiate();
         }
-
-        logger.fine('Waiting for publisher to ice-connect...');
-        await events.waitFor<EnginePublisherPeerStateUpdatedEvent>(
-          filter: (event) => event.state.isConnected(),
-          duration: connectOptions.timeouts.peerConnection,
-        );
+        if (!lkPlatformIsTest()) {
+          logger.fine('Waiting for publisher to ice-connect...');
+          await events.waitFor<EnginePublisherPeerStateUpdatedEvent>(
+            filter: (event) => event.state.isConnected(),
+            duration: connectOptions.timeouts.peerConnection,
+          );
+        }
       }
 
       // wait for data channel to open (if not already)
@@ -537,8 +543,8 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
                 type: Reliability.lossy,
               )));
       // _onDCStateUpdated(Reliability.lossy, state)
-    } catch (_) {
-      logger.severe('[$objectId] createDataChannel() did throw $_');
+    } catch (err) {
+      logger.severe('[$objectId] createDataChannel() did throw $err');
     }
 
     try {
@@ -554,8 +560,8 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
                 state: state,
                 type: Reliability.reliable,
               )));
-    } catch (_) {
-      logger.severe('[$objectId] createDataChannel() did throw $_');
+    } catch (err) {
+      logger.severe('[$objectId] createDataChannel() did throw $err');
     }
   }
 
@@ -633,6 +639,24 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
       // SIP DTMF packet
       events.emit(EngineSipDtmfReceivedEvent(
         dtmf: dp.sipDtmf,
+      ));
+    } else if (dp.whichValue() == lk_models.DataPacket_Value.rpcRequest) {
+      // RPC Request
+      events.emit(EngineRPCRequestReceivedEvent(
+        request: dp.rpcRequest,
+        identity: dp.participantIdentity,
+      ));
+    } else if (dp.whichValue() == lk_models.DataPacket_Value.rpcResponse) {
+      // RPC Response
+      events.emit(EngineRPCResponseReceivedEvent(
+        response: dp.rpcResponse,
+        identity: dp.participantIdentity,
+      ));
+    } else if (dp.whichValue() == lk_models.DataPacket_Value.rpcAck) {
+      // RPC Ack
+      events.emit(EngineRPCAckReceivedEvent(
+        ack: dp.rpcAck,
+        identity: dp.participantIdentity,
       ));
     } else {
       logger.warning('Unknown data packet type: ${dp.whichValue()}');
@@ -814,7 +838,7 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
       events.emit(const EngineFullRestartingEvent());
 
       if (signalClient.connectionState == ConnectionState.connected) {
-        await signalClient.sendLeave();
+        await signalClient.cleanUp();
       }
 
       await publisher?.dispose();
@@ -893,6 +917,7 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
     ..on<SignalJoinResponseEvent>((event) async {
       // create peer connections
       _subscriberPrimary = event.response.subscriberPrimary;
+      _serverInfo = event.response.serverInfo;
       var iceServersFromServer =
           event.response.iceServers.map((e) => e.toSDKType()).toList();
 
@@ -966,7 +991,7 @@ class Engine extends Disposable with EventsEmittable<EngineEvent> {
       logger.fine('Signal disconnected ${event.reason}');
       if (event.reason == DisconnectReason.disconnected && !_isClosed) {
         await handleDisconnect(ClientDisconnectReason.signal);
-      } else {
+      } else if (event.reason == DisconnectReason.signalingConnectionFailure) {
         events.emit(EngineDisconnectedEvent(
           reason: event.reason,
         ));
@@ -1082,12 +1107,10 @@ extension EnginePrivateMethods on Engine {
 
 extension EngineInternalMethods on Engine {
   @internal
-  List<lk_rtc.DataChannelInfo> dataChannelInfo() =>
-      [_reliableDCPub, _lossyDCPub]
-          .whereNotNull()
-          .where((e) => e.id != -1)
-          .map((e) => e.toLKInfoType())
-          .toList();
+  List<lk_rtc.DataChannelInfo> dataChannelInfo() => [
+        _reliableDCPub,
+        _lossyDCPub
+      ].nonNulls.where((e) => e.id != -1).map((e) => e.toLKInfoType()).toList();
   @internal
   Future<rtc.RTCRtpSender> createSimulcastTransceiverSender(
     LocalVideoTrack track,

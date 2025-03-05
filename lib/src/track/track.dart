@@ -59,10 +59,8 @@ abstract class Track extends DisposableChangeNotifier
 
   rtc.RTCRtpReceiver? receiver;
 
-  final bool? enableVisualizer;
-
   Track(this.kind, this.source, this._mediaStream, this._mediaStreamTrack,
-      {this.receiver, this.enableVisualizer}) {
+      {this.receiver}) {
     // Any event emitted will trigger ChangeNotifier
     events.listen((event) {
       logger.finer('[TrackEvent] $event, will notifyListeners()');
@@ -132,6 +130,8 @@ abstract class Track extends DisposableChangeNotifier
     await onStopped();
 
     logger.fine('$objectId.stop()');
+
+    await mediaStreamTrack.stop();
 
     _active = false;
     return true;

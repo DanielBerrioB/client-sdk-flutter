@@ -16,7 +16,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:meta/meta.dart';
@@ -27,10 +26,10 @@ import '../../extensions.dart';
 import '../../internal/events.dart';
 import '../../logger.dart';
 import '../../participant/remote.dart';
-import '../../support/native.dart';
 import '../../support/platform.dart';
 import '../../types/other.dart';
 import '../options.dart';
+import '../processor.dart';
 import '../remote/audio.dart';
 import '../remote/video.dart';
 import '../track.dart';
@@ -60,50 +59,14 @@ mixin VideoTrack on Track {
 
 /// Used to group [LocalAudioTrack] and [RemoteAudioTrack].
 mixin AudioTrack on Track {
-  EventChannel? _eventChannel;
-  StreamSubscription? _streamSubscription;
-
   @override
   Future<void> onStarted() async {
-    if (enableVisualizer == true) {
-      await startVisualizer();
-    }
+    logger.fine('AudioTrack.onStarted()');
   }
 
   @override
   Future<void> onStopped() async {
-    if (enableVisualizer == true) {
-      await stopVisualizer();
-    }
-  }
-
-  Future<void> startVisualizer() async {
-    if (_eventChannel != null) {
-      return;
-    }
-
-    await Native.startVisualizer(mediaStreamTrack.id!);
-
-    _eventChannel = EventChannel(
-        'io.livekit.audio.visualizer/eventChannel-${mediaStreamTrack.id}');
-    _streamSubscription =
-        _eventChannel?.receiveBroadcastStream().listen((event) {
-      //logger.fine('[$objectId] visualizer event(${event})');
-      events.emit(AudioVisualizerEvent(
-        track: this,
-        event: event,
-      ));
-    });
-  }
-
-  Future<void> stopVisualizer() async {
-    if (_eventChannel == null) {
-      return;
-    }
-    await Native.stopVisualizer(mediaStreamTrack.id!);
-    await _streamSubscription?.cancel();
-    _streamSubscription = null;
-    _eventChannel = null;
+    logger.fine('AudioTrack.onStopped()');
   }
 }
 
@@ -119,18 +82,17 @@ abstract class LocalTrack extends Track {
 
   bool _stopped = false;
 
-  LocalTrack(
-    TrackType kind,
-    TrackSource source,
-    rtc.MediaStream mediaStream,
-    rtc.MediaStreamTrack mediaStreamTrack, {
-    bool? enableVisualizer,
-  }) : super(
+  TrackProcessor? _processor;
+
+  TrackProcessor? get processor => _processor;
+
+  LocalTrack(TrackType kind, TrackSource source, rtc.MediaStream mediaStream,
+      rtc.MediaStreamTrack mediaStreamTrack)
+      : super(
           kind,
           source,
           mediaStream,
           mediaStreamTrack,
-          enableVisualizer: enableVisualizer,
         ) {
     mediaStreamTrack.onEnded = () {
       logger.fine('MediaStreamTrack.onEnded()');
@@ -253,6 +215,10 @@ abstract class LocalTrack extends Track {
     final newStream = await LocalTrack.createStream(currentOptions);
     final newTrack = newStream.getTracks().first;
 
+    var processor = _processor;
+
+    await stopProcessor();
+
     // replace track on sender
     try {
       await sender?.replaceTrack(newTrack);
@@ -267,6 +233,10 @@ abstract class LocalTrack extends Track {
     // set new stream & track to this object
     updateMediaStreamAndTrack(newStream, newTrack);
 
+    if (processor != null) {
+      await setProcessor(processor);
+    }
+
     // mark as started
     await start();
 
@@ -275,6 +245,50 @@ abstract class LocalTrack extends Track {
       track: this,
       options: currentOptions,
     ));
+  }
+
+  Future<void> setProcessor(TrackProcessor? processor) async {
+    if (processor == null) {
+      return;
+    }
+
+    if (_processor != null) {
+      await stopProcessor();
+    }
+
+    _processor = processor;
+
+    var processorOptions = ProcessorOptions(
+      kind: kind,
+      track: mediaStreamTrack,
+    );
+
+    await _processor!.init(processorOptions);
+
+    logger.fine('processor initialized');
+
+    events.emit(TrackProcessorUpdateEvent(track: this, processor: _processor));
+  }
+
+  @internal
+  Future<void> stopProcessor({bool keepElement = false}) async {
+    if (_processor == null) return;
+
+    logger.fine('stopping processor');
+    await _processor?.destroy();
+    _processor = null;
+
+    if (!keepElement) {
+      // processorElement?.remove();
+      // processorElement = null;
+    }
+
+    // apply original track constraints in case the processor changed them
+    //await this._mediaStreamTrack.applyConstraints(this._constraints);
+    // force re-setting of the mediaStreamTrack on the sender
+    //await this.setMediaStreamTrack(this._mediaStreamTrack, true);
+
+    events.emit(TrackProcessorUpdateEvent(track: this));
   }
 
   @internal

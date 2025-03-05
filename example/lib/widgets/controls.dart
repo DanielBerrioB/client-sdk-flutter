@@ -35,7 +35,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
 
   StreamSubscription? _subscription;
 
-  bool _speakerphoneOn = Hardware.instance.preferSpeakerOutput;
+  bool _speakerphoneOn = Hardware.instance.speakerOn ?? false;
 
   @override
   void initState() {
@@ -107,14 +107,13 @@ class _ControlsWidgetState extends State<ControlsWidget> {
     setState(() {});
   }
 
-  void _setSpeakerphoneOn() {
+  void _setSpeakerphoneOn() async {
     _speakerphoneOn = !_speakerphoneOn;
-    Hardware.instance.setSpeakerphoneOn(_speakerphoneOn);
+    await widget.room.setSpeakerOn(_speakerphoneOn, forceSpeakerOutput: false);
     setState(() {});
   }
 
   void _toggleCamera() async {
-    //
     final track = participant.videoTrackPublications.firstOrNull?.track;
     if (track == null) return;
 
@@ -191,23 +190,12 @@ class _ControlsWidgetState extends State<ControlsWidget> {
 
       await requestBackgroundPermission();
     }
-    if (lkPlatformIs(PlatformType.iOS)) {
-      var track = await LocalVideoTrack.createScreenShareTrack(
-        const ScreenShareCaptureOptions(
-          useiOSBroadcastExtension: true,
-          maxFrameRate: 15.0,
-        ),
-      );
-      await participant.publishVideoTrack(track);
-      return;
-    }
 
     if (lkPlatformIsWebMobile()) {
       await context
           .showErrorDialog('Screen share is not supported on mobile web');
       return;
     }
-
     await participant.setScreenShareEnabled(true, captureScreenAudio: true);
   }
 
@@ -396,9 +384,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
           if (!kIsWeb && lkPlatformIsMobile())
             IconButton(
               disabledColor: Colors.grey,
-              onPressed: Hardware.instance.canSwitchSpeakerphone
-                  ? _setSpeakerphoneOn
-                  : null,
+              onPressed: _setSpeakerphoneOn,
               icon: Icon(
                   _speakerphoneOn ? Icons.speaker_phone : Icons.phone_android),
               tooltip: 'Switch SpeakerPhone',

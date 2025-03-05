@@ -32,7 +32,7 @@ import org.webrtc.AudioTrack
 
 /** LiveKitPlugin */
 class LiveKitPlugin: FlutterPlugin, MethodCallHandler {
-  private var processors = mutableMapOf<LKAudioTrack, Visualizer>()
+  private var processors = mutableMapOf<String, Visualizer>()
   private var flutterWebRTCPlugin = FlutterWebRTCPlugin.sharedSingleton
   private var binaryMessenger: BinaryMessenger? = null
   /// The MethodChannel that will the communication between Flutter and native Android
@@ -50,8 +50,9 @@ class LiveKitPlugin: FlutterPlugin, MethodCallHandler {
   @SuppressLint("SuspiciousIndentation")
   private fun handleStartVisualizer(@NonNull call: MethodCall, @NonNull result: Result) {
     val trackId = call.argument<String>("trackId")
-    if (trackId == null) {
-      result.error("INVALID_ARGUMENT", "trackId is required", null)
+    val visualizerId = call.argument<String>("visualizerId")
+    if (trackId == null || visualizerId == null) {
+      result.error("INVALID_ARGUMENT", "trackId and visualizerId is required", null)
       return
     }
     var audioTrack: LKAudioTrack? = null
@@ -75,25 +76,21 @@ class LiveKitPlugin: FlutterPlugin, MethodCallHandler {
 
     val visualizer = Visualizer(
       barCount = barCount, isCentered = isCentered,
-      audioTrack = audioTrack, binaryMessenger = binaryMessenger!!)
+      audioTrack = audioTrack, binaryMessenger = binaryMessenger!!,
+      visualizerId = visualizerId)
 
-    processors[audioTrack] = visualizer
+    processors[visualizerId] = visualizer
     result.success(null)
   }
 
   private fun handleStopVisualizer(@NonNull call: MethodCall, @NonNull result: Result) {
     val trackId = call.argument<String>("trackId")
-    if (trackId == null) {
-      result.error("INVALID_ARGUMENT", "trackId is required", null)
+    val visualizerId = call.argument<String>("visualizerId")
+    if (trackId == null || visualizerId == null) {
+      result.error("INVALID_ARGUMENT", "trackId and visualizerId is required", null)
       return
     }
-    processors.entries.removeAll { (k, v) ->
-      if (k.id() == trackId) {
-        v.stop()
-        true
-      }
-      false
-    }
+    processors.entries.removeAll { (k, v) -> k == visualizerId }
     result.success(null)
   }
 
