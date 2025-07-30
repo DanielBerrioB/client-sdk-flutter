@@ -42,18 +42,36 @@ enum VideoRenderMode {
   platformView,
 }
 
+enum VideoViewFit {
+  contain,
+  cover,
+}
+
+extension VideoViewFitExt on VideoViewFit {
+  rtc.RTCVideoViewObjectFit toRTCType() {
+    if (this == VideoViewFit.cover) {
+      return rtc.RTCVideoViewObjectFit.RTCVideoViewObjectFitCover;
+    }
+    return rtc.RTCVideoViewObjectFit.RTCVideoViewObjectFitContain;
+  }
+}
+
 /// Widget that renders a [VideoTrack].
 class VideoTrackRenderer extends StatefulWidget {
   final VideoTrack track;
-  final rtc.RTCVideoViewObjectFit fit;
+  final VideoViewFit fit;
   final VideoViewMirrorMode mirrorMode;
   final VideoRenderMode renderMode;
+  final rtc.RTCVideoRenderer? cachedRenderer;
+  final bool autoDisposeRenderer;
 
   const VideoTrackRenderer(
     this.track, {
-    this.fit = rtc.RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+    this.fit = VideoViewFit.contain,
     this.mirrorMode = VideoViewMirrorMode.auto,
     this.renderMode = VideoRenderMode.texture,
+    this.autoDisposeRenderer = true,
+    this.cachedRenderer,
     Key? key,
   }) : super(key: key);
 
@@ -114,6 +132,9 @@ class _VideoTrackRendererState extends State<VideoTrackRenderer> {
   @override
   void initState() {
     super.initState();
+    if (widget.cachedRenderer != null) {
+      _renderer = widget.cachedRenderer;
+    }
     _internalKey = widget.track.addViewKey();
     if (kIsWeb) {
       () async {
@@ -127,7 +148,9 @@ class _VideoTrackRendererState extends State<VideoTrackRenderer> {
   void dispose() {
     widget.track.removeViewKey(_internalKey);
     _listener?.dispose();
-    disposeRenderer();
+    if (widget.autoDisposeRenderer) {
+      disposeRenderer();
+    }
     super.dispose();
   }
 
@@ -177,7 +200,7 @@ class _VideoTrackRendererState extends State<VideoTrackRenderer> {
               _renderer! as rtc.RTCVideoRenderer,
               mirror: _shouldMirror(),
               filterQuality: FilterQuality.medium,
-              objectFit: widget.fit,
+              objectFit: widget.fit.toRTCType(),
             );
           },
         );
@@ -187,7 +210,7 @@ class _VideoTrackRendererState extends State<VideoTrackRenderer> {
         widget.renderMode == VideoRenderMode.platformView) {
       return rtc.RTCVideoPlatFormView(
         mirror: _shouldMirror(),
-        objectFit: widget.fit,
+        objectFit: widget.fit.toRTCType(),
         onViewReady: (controller) {
           _renderer = controller;
           _renderer?.srcObject = widget.track.mediaStream;
@@ -199,7 +222,7 @@ class _VideoTrackRendererState extends State<VideoTrackRenderer> {
       _renderer! as rtc.RTCVideoRenderer,
       mirror: _shouldMirror(),
       filterQuality: FilterQuality.medium,
-      objectFit: widget.fit,
+      objectFit: widget.fit.toRTCType(),
     );
   }
 

@@ -152,6 +152,14 @@ class SignalConnectivityChangedEvent with SignalEvent, InternalEvent {
 }
 
 @internal
+class EngineJoinResponseEvent with EngineEvent, InternalEvent {
+  final lk_rtc.JoinResponse response;
+  const EngineJoinResponseEvent({
+    required this.response,
+  });
+}
+
+@internal
 class EngineConnectingEvent with InternalEvent, EngineEvent {
   const EngineConnectingEvent();
 }
@@ -167,6 +175,11 @@ class EngineDisconnectedEvent with InternalEvent, EngineEvent {
   EngineDisconnectedEvent({
     this.reason,
   });
+}
+
+@internal
+class EngineClosingEvent with InternalEvent, EngineEvent {
+  const EngineClosingEvent();
 }
 
 @internal
@@ -424,25 +437,31 @@ class EngineTrackAddedEvent with EngineEvent, InternalEvent {
 class EngineDataPacketReceivedEvent with EngineEvent, InternalEvent {
   final lk_models.UserPacket packet;
   final lk_models.DataPacket_Kind kind;
+  final String identity;
   const EngineDataPacketReceivedEvent({
     required this.packet,
     required this.kind,
+    required this.identity,
   });
 }
 
 @internal
 class EngineTranscriptionReceivedEvent with EngineEvent, InternalEvent {
   final lk_models.Transcription transcription;
+  final String identity;
   const EngineTranscriptionReceivedEvent({
     required this.transcription,
+    required this.identity,
   });
 }
 
 @internal
 class EngineSipDtmfReceivedEvent with EngineEvent, InternalEvent {
   final lk_models.SipDTMF dtmf;
+  final String identity;
   const EngineSipDtmfReceivedEvent({
     required this.dtmf,
+    required this.identity,
   });
 }
 
@@ -477,6 +496,36 @@ class EngineRPCAckReceivedEvent with EngineEvent, InternalEvent {
   final String identity;
   const EngineRPCAckReceivedEvent({
     required this.ack,
+    required this.identity,
+  });
+}
+
+@internal
+class EngineDataStreamHeaderEvent with EngineEvent, InternalEvent {
+  final lk_models.DataStream_Header header;
+  final String identity;
+  const EngineDataStreamHeaderEvent({
+    required this.header,
+    required this.identity,
+  });
+}
+
+@internal
+class EngineDataStreamChunkEvent with EngineEvent, InternalEvent {
+  final lk_models.DataStream_Chunk chunk;
+  final String identity;
+  const EngineDataStreamChunkEvent({
+    required this.chunk,
+    required this.identity,
+  });
+}
+
+@internal
+class EngineDataStreamTrailerEvent with EngineEvent, InternalEvent {
+  final lk_models.DataStream_Trailer trailer;
+  final String identity;
+  const EngineDataStreamTrailerEvent({
+    required this.trailer,
     required this.identity,
   });
 }

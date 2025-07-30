@@ -1,5 +1,88 @@
 # CHANGELOG
 
+## 2.5.0
+
+* Bump flutter-webrtc to 1.0.0.
+* Upgrade libwebrtc to m137.7151
+* fix: E2EE bug for Chrome. (#832)
+* fix(web, firefox): backup old values before overwriting them (#819)
+* fix: memory leak visualizer stop android (#831)
+* fix: ensure engine always has correct device id if switching camera fails (#820)
+* fix: Always emit RoomDisconnectedEvent when the reason is clientInitiated. (#821)
+* fix: sif frame enqueing with e2ee (#822)
+* fix: update camera `deviceId` when track is null (#814)
+* feat: Audio Visualizer for Windows/Linux. (#739)
+
+## 2.4.9
+
+* Added: Attribute typings for agent and transcription (#811)
+* Changed: Enum for VideoView.fit (#806)
+* Chore: Update protobuf protocol to v1.39.2 (#812)
+
+## 2.4.8
+
+* fix: fix room.disconnect when pending reconnect. (#802)
+* fix: fix bitrate display for remote video track. (#801)
+* feat: add a flag to skip auto native audio config (#797)
+* fix: sif detection for e2ee (#788)
+* chore: Update protobuf dep (#790)
+
+## 2.4.7
+
+* fix: interop for encode and decode function in e2ee cryptor (#785)
+* chore: Unorder the lossy data channel (#783)
+* chore: bump flutter-webrtc to 0.14.1.
+* fix: mitigate reconnect loop (#780)
+
+## 2.4.6
+
+* feat: Add smoothTransition option for AudioVisualizer. (#773)
+* fix: Fix deadlock when creating a frame cryptor on iOS/macOS.
+* fix: add task runner for linux to fix crashes.
+
+## 2.4.5
+
+* feat: noise filter for flutter web. (#762)
+
+## 2.4.4
+
+* feat: data stream
+* fix: calling setSourceEnabled should not affect the current output settings (#754)
+* fix: Calling connect on a disconnected room instance should reset _isClosed. (#752)
+* fix: Fix for Chrome getUserMedia "ideal" Constraint Change.
+* fix: fix duplicate fmtp for vp9 on some old Android devices. (#758)
+
+## 2.4.3
+
+* feat: Automatically configure audio mode for Android. (#746)
+
+## 2.4.2+hotfix.2
+
+* fix: Fix creation timing for local participant. (#749)
+* fix: Filter out non-video codecs for fast video track publication. (#747)
+
+## 2.4.2+hotfix.1
+
+* fix: fixed bug for fast track publish.
+
+## 2.4.2
+
+* fix: Fixed the echo issue on some specific models of Android devices.
+* chore: Bbmp version for flutter-webrtc.
+* fix: Improve browser version detection, fix issue #730 (#738)
+* feat: Fast track publication. (#720)
+* chore: Remove `bypassVoiceProcessing = true` settings for connect page. (#693)
+* fix: [bug] Crash when join room on Windows.
+* fix: Disable selectAudioInput for mobile platforms.
+
+## 2.4.1
+
+* feat: VideoRenderer support cache renderer. (#723)
+* feat: Visualizer for web. (#718)
+* fix: Fix bar Visualizer overflow for Android. (#717)
+* fix: disconnect reason inconsistent. (#715)
+* fix: remove stats video data print from logs (#716)
+
 ## 2.4.0
 
 * feat: RPC. (#682)

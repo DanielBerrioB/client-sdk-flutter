@@ -58,6 +58,7 @@ class LiveKitPlugin: FlutterPlugin, MethodCallHandler {
     var audioTrack: LKAudioTrack? = null
     val barCount = call.argument<Int>("barCount") ?: 7
     val isCentered = call.argument<Boolean>("isCentered") ?: true
+    var smoothTransition = call.argument<Boolean>("smoothTransition") ?: true
 
     val track = flutterWebRTCPlugin.getLocalTrack(trackId)
     if (track != null) {
@@ -75,7 +76,8 @@ class LiveKitPlugin: FlutterPlugin, MethodCallHandler {
     }
 
     val visualizer = Visualizer(
-      barCount = barCount, isCentered = isCentered,
+      barCount = barCount, isCentered = isCentered, 
+      smoothTransition = smoothTransition,
       audioTrack = audioTrack, binaryMessenger = binaryMessenger!!,
       visualizerId = visualizerId)
 
@@ -89,6 +91,11 @@ class LiveKitPlugin: FlutterPlugin, MethodCallHandler {
     if (trackId == null || visualizerId == null) {
       result.error("INVALID_ARGUMENT", "trackId and visualizerId is required", null)
       return
+    }
+    processors.forEach { (k, visualizer) ->
+      if(k == visualizerId) {
+        visualizer.stop()
+      }
     }
     processors.entries.removeAll { (k, v) -> k == visualizerId }
     result.success(null)

@@ -88,6 +88,17 @@ class Hardware {
   /// only supported on iOS for now
   bool get forceSpeakerOutput => _forceSpeakerOutput && _preferSpeakerOutput;
 
+  // This flag is used to determine if automatic native configuration
+  // of audio is enabled. If set to false Natvive.configureAudio
+  // will not be called, and the user is responsible for configuring
+  // the native audio configuration manually.
+  bool _isAutomaticConfigurationEnabled = true;
+  bool get isAutomaticConfigurationEnabled => _isAutomaticConfigurationEnabled;
+
+  void setAutomaticConfigurationEnabled({required bool enable}) {
+    _isAutomaticConfigurationEnabled = enable;
+  }
+
   Future<List<MediaDevice>> enumerateDevices({String? type}) async {
     var infos = await rtc.navigator.mediaDevices.enumerateDevices();
     var devices = infos
@@ -121,9 +132,8 @@ class Hardware {
   }
 
   Future<void> selectAudioInput(MediaDevice device) async {
-    if (lkPlatformIs(PlatformType.web)) {
-      logger.warning(
-          'selectAudioInput is only supported on Android/Windows/macOS');
+    if (lkPlatformIs(PlatformType.web) || lkPlatformIsMobile()) {
+      logger.warning('selectAudioInput is only supported on Windows/macOS');
       return;
     }
     selectedAudioInput = device;
@@ -158,7 +168,9 @@ class Hardware {
           }
           logger.fine('configuring for ${audioTrackState} using ${config}...');
           try {
-            await Native.configureAudio(config);
+            if (_isAutomaticConfigurationEnabled) {
+              await Native.configureAudio(config);
+            }
           } catch (error) {
             logger.warning('failed to configure ${error}');
           }
